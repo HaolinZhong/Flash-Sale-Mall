@@ -1,7 +1,5 @@
 package hz.mall.flashsale;
 
-import hz.mall.flashsale.domain.User;
-import hz.mall.flashsale.mapper.UserMapper;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
