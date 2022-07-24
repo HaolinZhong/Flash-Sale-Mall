@@ -72,6 +72,40 @@
                     </excludes>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.mybatis.generator</groupId>
+                <artifactId>mybatis-generator-maven-plugin</artifactId>
+                <version>1.4.1</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.mybatis.generator</groupId>
+                        <artifactId>mybatis-generator-core</artifactId>
+                        <version>1.4.1</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>mysql</groupId>
+                        <artifactId>mysql-connector-java</artifactId>
+                        <version>8.0.29</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <id>mybatis mapper generator</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>
+                                generate
+                            </goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+<!--                    enable moving generated files-->
+                    <verbose>true</verbose>
+<!--                    enable auto overwrite; never use it in real world scenario-->
+                    <overwrite>true</overwrite>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
