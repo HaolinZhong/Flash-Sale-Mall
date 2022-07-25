@@ -16,14 +16,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class UserServiceImpl implements UserService {
 
-    @Autowired
-    private UserDoMapper userDoMapper;
-
-    @Autowired
-    private UserPasswordDoMapper userPasswordDoMapper;
-
-    @Autowired
-    private UserVoConverter userVoConverter;
+    private final UserDoMapper userDoMapper;
+    private final UserPasswordDoMapper userPasswordDoMapper;
+    private final UserVoConverter userVoConverter;
 
     @Override
     public String getEncryptPassword(Integer userId) {
