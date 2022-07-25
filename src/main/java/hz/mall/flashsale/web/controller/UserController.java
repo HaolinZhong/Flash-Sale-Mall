@@ -8,6 +8,7 @@ import hz.mall.flashsale.web.model.UserVo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -19,6 +20,7 @@ import java.util.Random;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/user")
+@CrossOrigin
 public class UserController extends BaseController {
 
     private final UserService userService;
@@ -34,7 +36,7 @@ public class UserController extends BaseController {
         return CommonReturnType.builder().data(userVo).status("success").build();
     }
 
-    @GetMapping("/getotp")
+    @PostMapping(path = "/getotp", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     @ResponseBody
     public CommonReturnType getOtp(@RequestParam(name = "tel") String tel) {
         int randomInt = new Random().nextInt(99999);
@@ -51,7 +53,7 @@ public class UserController extends BaseController {
         // never do this in real world application for privacy issue!
         log.info("Message sent to tel " + tel + ", otp: " + otpCode);
 
-        return CommonReturnType.builder().build();
+        return CommonReturnType.builder().status("success").data(null).build();
     }
 
 }
