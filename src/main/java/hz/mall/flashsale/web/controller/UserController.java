@@ -73,10 +73,10 @@ public class UserController extends BaseController {
     @PostMapping(path = "/register", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     @ResponseBody
     public CommonReturnType register(
-            @NotNull @NotBlank @RequestParam(name = "tel") String tel,
-            @NotNull @NotBlank @RequestParam(name = "otpCode") String otpCode,
-            @NotNull @NotBlank @RequestParam(name = "name") String name,
-            @NotNull @NotBlank @RequestParam(name = "password") String password,
+            @NotBlank @RequestParam(name = "tel") String tel,
+            @NotBlank @RequestParam(name = "otpCode") String otpCode,
+            @NotBlank @RequestParam(name = "name") String name,
+            @NotBlank @RequestParam(name = "password") String password,
             @NotNull @RequestParam(name = "gender") Byte gender,
             @NotNull @RequestParam(name = "age") Integer age) throws BusinessException, UnsupportedEncodingException, NoSuchAlgorithmException {
 
@@ -99,6 +99,18 @@ public class UserController extends BaseController {
         userService.register(user);
 
         return CommonReturnType.builder().status("success").data("Register Success").build();
+    }
+
+
+    @PostMapping(value = "/login", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+    @ResponseBody
+    public CommonReturnType login(@NotBlank @RequestParam(name = "tel") String tel,
+                                  @NotBlank @RequestParam(name = "password") String password) throws UnsupportedEncodingException, NoSuchAlgorithmException, BusinessException {
+
+        User user = userService.validateLogin(tel, encryptByMd5(password));
+        httpServletRequest.getSession().setAttribute("IS_LOGIN", true);
+        httpServletRequest.getSession().setAttribute("LOGIN_USER", user);
+        return CommonReturnType.builder().status("success").build();
     }
 
     private String encryptByMd5(String password) throws NoSuchAlgorithmException, UnsupportedEncodingException {

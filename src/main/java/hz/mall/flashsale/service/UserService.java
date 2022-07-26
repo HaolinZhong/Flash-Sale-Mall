@@ -9,4 +9,6 @@ public interface UserService {
     UserVo getUserById(Integer userId);
 
     void register(User user) throws BusinessException;
+
+    User validateLogin(String tel, String encryptPassword) throws BusinessException;
 }

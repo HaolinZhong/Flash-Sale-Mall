@@ -11,7 +11,8 @@ public enum BusinessErrEnum implements CommonError{
     UNKNOW_ERROR(10002, "unknown error"),
 
     // 20000: user info related error
-    USER_NOT_EXIST(20001, "user not exist")
+    USER_NOT_EXIST(20001, "user not exist"),
+    USER_LOGIN_FAIL(20002, "incorrect phone number or password")
     ;
 
     private int errCode;

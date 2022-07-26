@@ -58,4 +58,17 @@ public class UserServiceImpl implements UserService {
         UserPasswordDo userPasswordDo = userConverter.userToUserPasswordDo(user);
         userPasswordDoMapper.insertSelective(userPasswordDo);
     }
+
+    @Override
+    public User validateLogin(String tel, String encryptPassword) throws BusinessException {
+        UserDo userDo = userDoMapper.selectByTel(tel);
+        if (userDo == null) throw new BusinessException(BusinessErrEnum.USER_LOGIN_FAIL);
+        UserPasswordDo userPasswordDo = userPasswordDoMapper.selectByUserId(userDo.getId());
+
+        if (!StringUtils.equals(encryptPassword, userPasswordDo.getEncryptPassword())) {
+            throw new BusinessException(BusinessErrEnum.USER_LOGIN_FAIL);
+        }
+
+        return userConverter.DoToUser(userDo, userPasswordDo);
+    }
 }
