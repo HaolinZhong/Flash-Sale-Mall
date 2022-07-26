@@ -1,15 +1,19 @@
 package hz.mall.flashsale.service;
 
-import hz.mall.flashsale.converter.UserVoConverter;
+import hz.mall.flashsale.converter.UserConverter;
+import hz.mall.flashsale.domain.User;
 import hz.mall.flashsale.domain.UserDo;
 import hz.mall.flashsale.domain.UserPasswordDo;
+import hz.mall.flashsale.error.BusinessErrEnum;
+import hz.mall.flashsale.error.BusinessException;
 import hz.mall.flashsale.mapper.UserDoMapper;
 import hz.mall.flashsale.mapper.UserPasswordDoMapper;
 import hz.mall.flashsale.web.model.UserVo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -18,14 +22,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserDoMapper userDoMapper;
     private final UserPasswordDoMapper userPasswordDoMapper;
-    private final UserVoConverter userVoConverter;
-
-    @Override
-    public String getEncryptPassword(Integer userId) {
-        UserPasswordDo userPasswordDo = userPasswordDoMapper.selectByUserId(userId);
-        if (userPasswordDo == null) return null;
-        return userPasswordDo.getEncryptPassword();
-    }
+    private final UserConverter userConverter;
 
     @Override
     public UserVo getUserById(Integer userId) {
@@ -33,6 +30,24 @@ public class UserServiceImpl implements UserService {
         if (userDo == null) {
             return null;
         }
-        return userVoConverter.UserDoToVo(userDo);
+        return userConverter.UserDoToVo(userDo);
+    }
+
+    @Transactional
+    @Override
+    public void register(User user) throws BusinessException {
+        if (user == null) throw new BusinessException(BusinessErrEnum.PARAMETER_VALIDATION_ERROR);
+        if (StringUtils.isEmpty(user.getName())
+                || user.getGender() == null
+                || user.getAge() == null
+                || StringUtils.isEmpty(user.getTel())) {
+            throw new BusinessException(BusinessErrEnum.PARAMETER_VALIDATION_ERROR);
+        }
+
+        UserDo userDo = userConverter.userToUserDo(user);
+        userDoMapper.insertSelective(userDo);
+
+        UserPasswordDo userPasswordDo = userConverter.userToUserPasswordDo(user);
+        userPasswordDoMapper.insertSelective(userPasswordDo);
     }
 }

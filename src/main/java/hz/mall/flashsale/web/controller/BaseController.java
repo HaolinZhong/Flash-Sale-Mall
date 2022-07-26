@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.ConstraintViolationException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,7 +26,11 @@ public class BaseController {
             BusinessException be = (BusinessException) e;
             responseData.put("errCode", be.getErrCode());
             responseData.put("errMsg", be.getErrMsg());
-        } else {
+        } else if (e instanceof ConstraintViolationException){
+            ConstraintViolationException cve = (ConstraintViolationException) e;
+            responseData.put("errCode", BusinessErrEnum.PARAMETER_VALIDATION_ERROR.getErrCode());
+            responseData.put("errMsg", cve.getMessage());
+        }else {
             responseData.put("errCode", BusinessErrEnum.UNKNOW_ERROR.getErrCode());
             responseData.put("errMsg", BusinessErrEnum.UNKNOW_ERROR.getErrMsg());
         }

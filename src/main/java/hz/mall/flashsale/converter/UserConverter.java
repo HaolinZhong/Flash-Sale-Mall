@@ -2,11 +2,19 @@ package hz.mall.flashsale.converter;
 
 import hz.mall.flashsale.domain.User;
 import hz.mall.flashsale.domain.UserDo;
-import org.mapstruct.DecoratedWith;
+import hz.mall.flashsale.domain.UserPasswordDo;
+import hz.mall.flashsale.web.model.UserVo;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
 @Mapper
-@DecoratedWith(UserConverterDecorator.class)
 public interface UserConverter {
-    User userDoToUser(UserDo userDo);
+    @Mapping(source = "userDo.id", target = "id")
+    User DoToUser(UserDo userDo, UserPasswordDo userPasswordDo);
+    UserDo userToUserDo(User user);
+
+    @Mapping(source = "id", target = "userId")
+    UserPasswordDo userToUserPasswordDo(User user);
+
+    UserVo UserDoToVo(UserDo userDo);
 }

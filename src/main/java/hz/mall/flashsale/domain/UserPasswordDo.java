@@ -1,5 +1,12 @@
 package hz.mall.flashsale.domain;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class UserPasswordDo {
     /**
      *
