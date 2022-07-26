@@ -45,9 +45,11 @@
                 data:{
                     "tel":$("#tel").val(),
                 },
+                // xhrFields: {withCredentials: true},
                 success:function(data){
                     if(data.status == "success"){
                         alert("Code sended!");
+                        window.location.href="register.html";
                     }else{
                         alert("Failed to send due to error: "+data.data.errMsg);
                     }

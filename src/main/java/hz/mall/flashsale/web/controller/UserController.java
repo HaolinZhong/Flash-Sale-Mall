@@ -18,7 +18,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -32,6 +36,7 @@ public class UserController extends BaseController {
 
     private final UserService userService;
     private final HttpServletRequest httpServletRequest;
+    private Map<String, String> telOtpCodeMap = new HashMap<>();
 
     @GetMapping("/get")
     @ResponseBody
@@ -51,14 +56,16 @@ public class UserController extends BaseController {
         String otpCode = String.valueOf(randomInt);
 
         // todo: use redis for caching user telephone number and otp code
-        // for now, use http session
-        httpServletRequest.setAttribute(tel, otpCode);
+        // for now, use hash map
+        telOtpCodeMap.put(tel, otpCode);
 
         // todo:send otp code to user telephone for user registration
         // (or may never do it because I have no money XD)
         // for now just log it
         // never do this in real world application for privacy issue!
         log.info("Message sent to tel " + tel + ", otp: " + otpCode);
+
+
 
         return CommonReturnType.builder().status("success").data(null).build();
     }
@@ -71,12 +78,11 @@ public class UserController extends BaseController {
             @NotNull @NotBlank @RequestParam(name = "name") String name,
             @NotNull @NotBlank @RequestParam(name = "password") String password,
             @NotNull @RequestParam(name = "gender") Byte gender,
-            @NotNull @RequestParam(name = "age") Integer age) throws BusinessException {
+            @NotNull @RequestParam(name = "age") Integer age) throws BusinessException, UnsupportedEncodingException, NoSuchAlgorithmException {
 
-        // validate: tel maps to the otpCode
-        String otpCodeInSession = (String) this.httpServletRequest.getSession().getAttribute(tel);
+        String otpCodeStored = telOtpCodeMap.get(tel);
 
-        if (otpCodeInSession == null || !otpCodeInSession.equals(otpCode)) {
+        if (otpCodeStored == null || !otpCodeStored.equals(otpCode)) {
             throw new BusinessException(BusinessErrEnum.PARAMETER_VALIDATION_ERROR, "Invalid Verification Code");
         }
 
@@ -87,10 +93,19 @@ public class UserController extends BaseController {
                 .age(age)
                 .tel(tel)
                 .registerMode("byPhone")
-                .encryptPassword(MD5Encoder.encode(password.getBytes()))
+                .encryptPassword(this.encryptByMd5(password))
                 .build();
 
+        userService.register(user);
+
         return CommonReturnType.builder().status("success").data("Register Success").build();
+    }
+
+    private String encryptByMd5(String password) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+        MessageDigest md5 = MessageDigest.getInstance("MD5");
+        Base64.Encoder base64en = Base64.getEncoder();
+        String encryptPassword = base64en.encodeToString(md5.digest(password.getBytes("utf-8")));
+        return encryptPassword;
     }
 
 }
