@@ -112,8 +112,8 @@
                 <configuration>
 <!--                    enable moving generated files-->
                     <verbose>true</verbose>
-<!--                    enable auto overwrite; never use it in real world scenario-->
-                    <overwrite>true</overwrite>
+<!--                    enable auto overwrite; never enable it in real world scenario-->
+                    <overwrite>false</overwrite>
                 </configuration>
             </plugin>
             <plugin>
