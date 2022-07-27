@@ -38,12 +38,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public void register(User user) throws BusinessException {
         if (user == null) throw new BusinessException(BusinessErrEnum.PARAMETER_VALIDATION_ERROR);
-        if (StringUtils.isEmpty(user.getName())
-                || user.getGender() == null
-                || user.getAge() == null
-                || StringUtils.isEmpty(user.getTel())) {
-            throw new BusinessException(BusinessErrEnum.PARAMETER_VALIDATION_ERROR);
-        }
 
         UserDo userDo = userConverter.userToUserDo(user);
 

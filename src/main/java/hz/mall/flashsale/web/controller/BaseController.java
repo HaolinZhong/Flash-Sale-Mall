@@ -9,8 +9,12 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.ConstraintDeclarationException;
 import javax.validation.ConstraintViolationException;
+import javax.validation.ValidationException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class BaseController {
@@ -19,6 +23,8 @@ public class BaseController {
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
     public CommonReturnType AllExceptionHandler(HttpServletRequest request, Exception e) {
+
+        System.out.println("Handler running...");
 
         Map<String, Object> responseData = new HashMap<>();
 

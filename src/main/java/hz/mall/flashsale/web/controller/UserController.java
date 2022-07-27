@@ -12,12 +12,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.tomcat.util.security.MD5Encoder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
+import javax.validation.constraints.*;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -32,6 +31,7 @@ import java.util.Random;
 @RequiredArgsConstructor
 @RequestMapping("/user")
 @CrossOrigin
+@Validated
 public class UserController extends BaseController {
 
     private final UserService userService;
@@ -73,12 +73,27 @@ public class UserController extends BaseController {
     @PostMapping(path = "/register", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     @ResponseBody
     public CommonReturnType register(
-            @NotBlank @RequestParam(name = "tel") String tel,
-            @NotBlank @RequestParam(name = "otpCode") String otpCode,
-            @NotBlank @RequestParam(name = "name") String name,
-            @NotBlank @RequestParam(name = "password") String password,
-            @NotNull @RequestParam(name = "gender") Byte gender,
-            @NotNull @RequestParam(name = "age") Integer age) throws BusinessException, UnsupportedEncodingException, NoSuchAlgorithmException {
+            @NotBlank(message = "please enter your phone number")
+            @RequestParam(name = "tel") String tel,
+
+            @NotBlank(message = "please enter your verification code")
+            @RequestParam(name = "otpCode") String otpCode,
+
+            @NotBlank(message = "please enter your name")
+            @RequestParam(name = "name") String name,
+
+            @NotBlank(message = "please enter your password")
+            @RequestParam(name = "password") String password,
+
+            @NotNull(message = "please enter your gender")
+            @Min(value = 0, message = "please use 0 (female) or 1 (male) to suggest your gender")
+            @Max(value = 1, message = "please use 0 (female) or 1 (male) to suggest your gender")
+            @RequestParam(name = "gender") Byte gender,
+
+            @NotNull(message = "please enter your age")
+            @Min(value = 0, message = "age cannot be smaller than 0")
+            @Max(value = 150, message = "age cannot be larger than 150")
+            @RequestParam(name = "age") Integer age) throws BusinessException, UnsupportedEncodingException, NoSuchAlgorithmException {
 
         String otpCodeStored = telOtpCodeMap.get(tel);
 
