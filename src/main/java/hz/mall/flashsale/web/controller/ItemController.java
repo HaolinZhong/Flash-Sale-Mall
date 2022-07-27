@@ -15,6 +15,8 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @RestController
@@ -67,5 +69,15 @@ public class ItemController extends BaseController {
         ItemVo itemVo = itemConverter.itemToItemVo(item);
 
         return CommonReturnType.builder().status("success").data(itemVo).build();
+    }
+
+    @GetMapping(value = "/list")
+    @ResponseBody
+    public CommonReturnType listItem() {
+        List<Item> itemList = itemService.listItem();
+        List<ItemVo> itemVoList = itemList
+                .stream().map(item -> itemConverter.itemToItemVo(item))
+                .collect(Collectors.toList());
+        return CommonReturnType.builder().status("success").data(itemVoList).build();
     }
 }

@@ -22,7 +22,7 @@ public class ItemVo {
 
     private String description;
 
-    private Integer sale;
+    private Integer sales;
 
     private String imgUrl;
 }

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -40,7 +41,13 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public List<Item> listItem() {
-        return null;
+        List<ItemDo> itemDoList = itemDoMapper.listAllItems();
+        List<Item> itemList = itemDoList.stream().map(itemDo -> {
+            ItemStockDo itemStockDo = itemStockDoMapper.selectByItemId(itemDo.getId());
+            Item item = itemConverter.DoToItem(itemDo, itemStockDo);
+            return item;
+        }).collect(Collectors.toList());
+        return itemList;
     }
 
     @Override
