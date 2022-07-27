@@ -7,6 +7,7 @@ import hz.mall.flashsale.service.ItemService;
 import hz.mall.flashsale.web.model.CommonReturnType;
 import hz.mall.flashsale.web.model.ItemVo;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.constraints.Min;
@@ -53,7 +54,17 @@ public class ItemController extends BaseController {
                 .build();
 
         Item itemCreated = itemService.createItem(item);
-        ItemVo itemVo = itemConverter.itemToVo(itemCreated);
+        ItemVo itemVo = itemConverter.itemToItemVo(itemCreated);
+
+        return CommonReturnType.builder().status("success").data(itemVo).build();
+    }
+
+
+    @GetMapping(value = "/get")
+    @ResponseBody
+    public CommonReturnType getItem(@RequestParam("id") Integer id) {
+        Item item = itemService.getItemById(id);
+        ItemVo itemVo = itemConverter.itemToItemVo(item);
 
         return CommonReturnType.builder().status("success").data(itemVo).build();
     }

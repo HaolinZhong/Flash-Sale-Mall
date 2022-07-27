@@ -49,6 +49,6 @@ public class ItemServiceImpl implements ItemService {
         if (itemDo == null) return null;
         ItemStockDo itemStockDo = itemStockDoMapper.selectByItemId(itemDo.getId());
         Item item = itemConverter.DoToItem(itemDo, itemStockDo);
-        return null;
+        return item;
     }
 }

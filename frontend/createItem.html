@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Item</title>
+</head>
+
+<link href="static/assets/global/plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css"/>
+<link href="static/assets/global/css/components.css" rel="stylesheet" type="text/css"/>
+<link href="static/assets/admin/pages/css/login.css" rel="stylesheet" type="text/css"/>
+<script src="static/assets/global/plugins/jquery-1.11.0.min.js" type="text/javascript"></script>
+
+<body class="login">
+<div class="content">
+    <h3 class="form-title">Create an Item</h3>
+    <div class="form-group">
+        <label class="control-label">Item Name</label>
+        <div>
+            <input class="form-control" type="text" placeholder="Enter Item Name..." name="title" id="title"/>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="control-label">Description</label>
+        <div>
+            <input class="form-control" type="text" placeholder="Enter Item Description..." name="desc" id="desc"/>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="control-label">Price</label>
+        <div>
+            <input class="form-control" type="text" placeholder="Enter Item Price..." name="price" id="price"/>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="control-label">Image Url</label>
+        <div>
+            <input class="form-control" type="text" placeholder="Enter Item Image Url..." name="imgUrl" id="imgUrl"/>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="control-label">Stock</label>
+        <div>
+            <input class="form-control" type="text" placeholder="Enter Item Stock..." name="stock" id="stock"/>
+        </div>
+    </div>
+
+
+    <div class="form-actions">
+        <button class="btn blue" id="submit" type="submit">
+            Submit
+        </button>
+    </div>
+</div>
+
+</body>
+
+<script>
+
+    jQuery(document).ready(function(){
+
+        $("#submit").on("click",function(){
+
+            const title = $("#title").val();
+            const desc = $("#desc").val();
+            const price = $("#price").val();
+            const imgUrl = $("#imgUrl").val();
+            const stock = $("#stock").val();
+
+            if(title == null || title == ""){
+                alert("Please enter item name!");
+                return false;
+            }
+
+            if(desc == null || desc == ""){
+                alert("Please enter item description!");
+                return false;
+            }
+
+            if(price == null || price == ""){
+                alert("Please enter item price!");
+                return false;
+            }
+
+            if(imgUrl == null || imgUrl == ""){
+                alert("Please enter item image url!");
+                return false;
+            }
+
+            if(stock == null || stock == ""){
+                alert("Please enter item stock!");
+                return false;
+            }
+
+
+            $.ajax({
+                type:"POST",
+                contentType:"application/x-www-form-urlencoded",
+                url:"http://localhost:8080/item/create",
+                data:{
+                    "title": title,
+                    "desc": desc,
+                    "price": price,
+                    "imgUrl": imgUrl,
+                    "stock": stock
+                },
+                // xhrFields: {withCredentials: true},
+                success:function(data){
+                    if(data.status == "success"){
+                        alert("Item successfully created!");
+                    }else{
+                        alert("Creation failed due to error: "+data.data.errMsg);
+                    }
+                },
+                error:function(data){
+                    alert("Creation failed due to error: "+data.responseText);
+                }
+            });
+            return false;
+        });
+
+
+    });
+
+
+</script>
+
+</html>

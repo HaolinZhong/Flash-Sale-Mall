@@ -18,5 +18,5 @@ public interface ItemConverter {
     @Mapping(source = "id", target = "itemId")
     ItemStockDo itemToItemStockDo(Item item);
 
-    ItemVo itemToVo(Item item);
+    ItemVo itemToItemVo(Item item);
 }
