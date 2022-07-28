@@ -29,7 +29,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public Order createOrder(Integer userId, Integer itemId, Integer amount) throws BusinessException {
+    public Order createOrder(Integer userId, Integer itemId, Integer amount, Integer promoId) throws BusinessException {
 
         // 1. validation
         Item item = itemService.getItemById(itemId);
@@ -46,19 +46,37 @@ public class OrderServiceImpl implements OrderService {
             throw new BusinessException(BusinessErrEnum.PARAMETER_VALIDATION_ERROR, "invalid amount");
         }
 
+        if (promoId != null) {
+            if (promoId.intValue() != item.getPromo().getId()) {
+                throw new BusinessException(BusinessErrEnum.PARAMETER_VALIDATION_ERROR, "invalid promo information");
+            }
+
+            if (item.getPromo().getStatus().intValue() != 2) {
+                throw new BusinessException(BusinessErrEnum.PARAMETER_VALIDATION_ERROR, "promo has not started");
+            }
+        }
+
         // 2. decrease stock when an order was placed (instead of decreasing when paid)
         boolean assigned = itemService.decreaseStock(itemId, amount);
 
         if (!assigned) throw new BusinessException(BusinessErrEnum.STOCK_NOT_ENOUGH);
 
         // 3. persist order
-        Order order = Order.builder()
+        Order.OrderBuilder orderBuilder = Order.builder()
                 .userId(userId)
                 .itemId(itemId)
                 .amount(amount)
-                .itemPrice(item.getPrice())
+                .id(generateOrderId());      // generate order id string
+
+        if (promoId != null) {
+            orderBuilder.itemPrice(item.getPromo().getPromoItemPrice());
+        } else {
+            orderBuilder.itemPrice(item.getPrice());
+        }
+
+        Order order = orderBuilder
+                .promoId(promoId)
                 .totalPrice(item.getPrice().multiply(new BigDecimal(amount)))
-                .id(generateOrderId())      // generate order id string
                 .build();
 
         OrderDo orderDo = orderConverter.orderToDo(order);

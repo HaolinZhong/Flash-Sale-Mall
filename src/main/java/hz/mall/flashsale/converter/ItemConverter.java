@@ -8,7 +8,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
-@Mapper
+
+@Mapper(uses={DateConverter.class})
 public interface ItemConverter {
 
     @Mapping(source = "itemDo.id", target = "id")

@@ -29,7 +29,8 @@ public class OrderController extends BaseController {
     @PostMapping(value = "/create", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public CommonReturnType createOrder(
             @NotNull @RequestParam("itemId") Integer itemId,
-            @NotNull @RequestParam("amount") Integer amount
+            @NotNull @RequestParam("amount") Integer amount,
+            @RequestParam(value = "promoId", required = false) Integer promoId
     ) throws BusinessException {
 
         // get user login information
@@ -41,7 +42,7 @@ public class OrderController extends BaseController {
         // get user information
         User user = (User) httpServletRequest.getSession().getAttribute("LOGIN_USER");
 
-        Order order= orderService.createOrder(user.getId(), itemId, amount);
+        Order order= orderService.createOrder(user.getId(), itemId, amount, promoId);
 
         return CommonReturnType.builder().status("success").build();
     }

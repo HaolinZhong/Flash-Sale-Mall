@@ -14,6 +14,13 @@
 <div class="content">
     <h3 class="form-title">Item Details</h3>
     <div class="form-group">
+        <label style="color: darkred" class="control-label">Promo Sale Time</label>
+        <div>
+            <label style="color: red" class="control-label" id="promoStartDate"/>
+        </div>
+    </div>
+
+    <div class="form-group">
         <div>
             <label class="control-label" id="title"/>
         </div>
@@ -30,6 +37,13 @@
         <label class="control-label">Price</label>
         <div>
             <label class="control-label" id="price"/>
+        </div>
+    </div>
+
+    <div class="form-group" id="promoPriceContainer">
+        <label style="color: darkred" class="control-label">Promo Price</label>
+        <div>
+            <label style="color: red" class="control-label" id="promoPrice"/>
         </div>
     </div>
 
@@ -85,7 +99,8 @@
                 contentType:"application/x-www-form-urlencoded",
                 data: {
                     "itemId": itemVO.id,
-                    "amount": 1
+                    "amount": 1,
+                    "promoId": itemVO.promoId
                 },
                 xhrFields: {withCredentials: true},
                 success: function (data) {
@@ -119,6 +134,7 @@
                 if (data.status == "success") {
                     itemVO=data.data;
                     reloadDom();
+                    setInterval(reloadDom, 1000);
                 } else {
                     alert("Failed to retrieve item details due to error: " + data.data.errMsg);
                 }
@@ -137,6 +153,27 @@
         $("#price").text(itemVO.price);
         $("#imgUrl").attr("src", itemVO.imgUrl);
         $("#sales").text(itemVO.sales)
+        if (itemVO.promoStatus == 1) {
+            //let startTime = itemVO.startDate.replace(new RegExp("-", "gm"), "/");
+            let startTime = (new Date(itemVO.startDate)).getTime();
+            let now = Date.parse(new Date());
+            let delta = (startTime - now) / 1000;
+
+            if (delta <= 0) {
+                // promo has already begun
+                itemVO.promoStatus=2;
+                reloadDom();
+            }
+
+            $("#promoStartDate").text(`Next flash sale will start at ${itemVO.startDate}, ${delta} seconds left...`);
+            $("#promoPrice").text(itemVO.promoPrice);
+            $("#createorder").attr("disabled", true);
+
+        } else if (itemVO.promoStatus == 2) {
+            $("#promoStartDate").text("The flash sale is ongoing!");
+            $("#promoPrice").text(itemVO.promoPrice);
+            $("#createorder").attr("disabled", false);
+        }
     }
 
 

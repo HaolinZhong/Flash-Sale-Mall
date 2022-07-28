@@ -19,6 +19,10 @@ public class Order {
 
     private Integer amount;
 
+    // if not null, the order is placed under a promo
+    private Integer promoId;
+
+    // if promoId is not null, represent promo price
     private BigDecimal itemPrice;
 
     private BigDecimal totalPrice;
