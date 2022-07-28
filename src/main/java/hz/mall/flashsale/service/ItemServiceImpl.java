@@ -58,4 +58,17 @@ public class ItemServiceImpl implements ItemService {
         Item item = itemConverter.DoToItem(itemDo, itemStockDo);
         return item;
     }
+
+    @Override
+    @Transactional
+    public boolean decreaseStock(Integer itemId, Integer amount) {
+        int nRowAffected = itemStockDoMapper.decreaseStock(itemId, amount);
+        return nRowAffected > 0;
+    }
+
+    @Override
+    @Transactional
+    public void increaseSales(Integer itemId, Integer amount) {
+        itemDoMapper.increaseSales(itemId, amount);
+    }
 }

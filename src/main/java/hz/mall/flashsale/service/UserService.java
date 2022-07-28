@@ -6,7 +6,7 @@ import hz.mall.flashsale.web.model.UserVo;
 
 public interface UserService {
 
-    UserVo getUserById(Integer userId);
+    User getUserById(Integer userId);
 
     void register(User user) throws BusinessException;
 

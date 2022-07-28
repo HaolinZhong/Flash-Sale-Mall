@@ -17,4 +17,6 @@ public interface UserConverter {
     UserPasswordDo userToUserPasswordDo(User user);
 
     UserVo UserDoToVo(UserDo userDo);
+
+    UserVo userToUserVo(User user);
 }

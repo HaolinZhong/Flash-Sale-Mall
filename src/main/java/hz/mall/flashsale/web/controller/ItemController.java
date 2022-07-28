@@ -8,6 +8,7 @@ import hz.mall.flashsale.web.model.CommonReturnType;
 import hz.mall.flashsale.web.model.ItemVo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.constraints.Min;
@@ -21,7 +22,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/item")
-@CrossOrigin
+@CrossOrigin(allowCredentials="true", allowedHeaders = "*", originPatterns = "*")
+@Validated
 public class ItemController extends BaseController {
 
     private final ItemService itemService;

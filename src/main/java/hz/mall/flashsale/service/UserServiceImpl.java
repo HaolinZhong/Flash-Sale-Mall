@@ -26,12 +26,15 @@ public class UserServiceImpl implements UserService {
     private final UserConverter userConverter;
 
     @Override
-    public UserVo getUserById(Integer userId) {
+    public User getUserById(Integer userId) {
         UserDo userDo = userDoMapper.selectByPrimaryKey(userId);
         if (userDo == null) {
             return null;
         }
-        return userConverter.UserDoToVo(userDo);
+
+        UserPasswordDo userPasswordDo = userPasswordDoMapper.selectByUserId(userDo.getId());
+
+        return userConverter.DoToUser(userDo, userPasswordDo);
     }
 
     @Transactional

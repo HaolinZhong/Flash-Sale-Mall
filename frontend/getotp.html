@@ -46,7 +46,7 @@
                 data:{
                     "tel":$("#tel").val(),
                 },
-                // xhrFields: {withCredentials: true},
+                xhrFields: {withCredentials: true},
                 success:function(data){
                     if(data.status == "success"){
                         alert("Code sended!");

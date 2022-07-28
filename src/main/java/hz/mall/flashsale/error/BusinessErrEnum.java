@@ -12,8 +12,14 @@ public enum BusinessErrEnum implements CommonError{
 
     // 20000: user info related error
     USER_NOT_EXIST(20001, "user not exist"),
-    USER_LOGIN_FAIL(20002, "incorrect phone number or password")
+    USER_LOGIN_FAIL(20002, "incorrect phone number or password"),
+    USER_NOT_LOGIN(20003, "user has not login"),
+
+    // 30000: order error
+    STOCK_NOT_ENOUGH(30001, "stock not enough")
+
     ;
+
 
     private int errCode;
     private String errMsg;

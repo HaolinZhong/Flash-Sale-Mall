@@ -1,5 +1,6 @@
 package hz.mall.flashsale.web.controller;
 
+import hz.mall.flashsale.converter.UserConverter;
 import hz.mall.flashsale.domain.User;
 import hz.mall.flashsale.error.BusinessErrEnum;
 import hz.mall.flashsale.error.BusinessException;
@@ -30,21 +31,22 @@ import java.util.Random;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/user")
-@CrossOrigin
+@CrossOrigin(allowCredentials="true", allowedHeaders = "*", originPatterns = "*")
 @Validated
 public class UserController extends BaseController {
 
+    private final UserConverter userConverter;
     private final UserService userService;
     private final HttpServletRequest httpServletRequest;
-    private Map<String, String> telOtpCodeMap = new HashMap<>();
 
     @GetMapping("/get")
     @ResponseBody
     public CommonReturnType getUserById(@RequestParam(name = "id") Integer id) throws BusinessException {
-        UserVo userVo = userService.getUserById(id);
+        User user = userService.getUserById(id);
 
-        if (userVo == null) throw new BusinessException(BusinessErrEnum.USER_NOT_EXIST);
+        if (user == null) throw new BusinessException(BusinessErrEnum.USER_NOT_EXIST);
 
+        UserVo userVo = userConverter.userToUserVo(user);
         return CommonReturnType.builder().data(userVo).status("success").build();
     }
 
@@ -56,8 +58,8 @@ public class UserController extends BaseController {
         String otpCode = String.valueOf(randomInt);
 
         // todo: use redis for caching user telephone number and otp code
-        // for now, use hash map
-        telOtpCodeMap.put(tel, otpCode);
+        // for now, use session
+        httpServletRequest.getSession().setAttribute(tel, otpCode);
 
         // todo:send otp code to user telephone for user registration
         // (or may never do it because I have no money XD)
@@ -95,9 +97,9 @@ public class UserController extends BaseController {
             @Max(value = 150, message = "age cannot be larger than 150")
             @RequestParam(name = "age") Integer age) throws BusinessException, UnsupportedEncodingException, NoSuchAlgorithmException {
 
-        String otpCodeStored = telOtpCodeMap.get(tel);
+        String otpCodeInSession = (String) httpServletRequest.getSession().getAttribute(tel);
 
-        if (otpCodeStored == null || !otpCodeStored.equals(otpCode)) {
+        if (otpCodeInSession == null || !otpCodeInSession.equals(otpCode)) {
             throw new BusinessException(BusinessErrEnum.PARAMETER_VALIDATION_ERROR, "Invalid Verification Code");
         }
 

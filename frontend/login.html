@@ -68,10 +68,11 @@
                     "tel": telphone,
                     "password": password,
                 },
-                // xhrFields: {withCredentials: true},
+                xhrFields: {withCredentials: true},
                 success:function(data){
                     if(data.status == "success"){
                         alert("Login successed!");
+                        window.location.href="listItem.html";
                     }else{
                         alert("Login failed due to error: "+data.data.errMsg);
                     }
