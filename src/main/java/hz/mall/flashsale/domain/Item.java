@@ -24,4 +24,7 @@ public class Item {
     private Integer sales;
 
     private String imgUrl;
+
+    // if promo is not null, the item is in an incoming or ongoing promo
+    private Promo promo;
 }

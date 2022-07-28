@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.joda.time.DateTime;
 
 import java.math.BigDecimal;
 
@@ -25,4 +26,13 @@ public class ItemVo {
     private Integer sales;
 
     private String imgUrl;
+
+    private Integer promoStatus;
+
+    private BigDecimal promoPrice;
+
+    private Integer promoId;
+
+    private DateTime startDate;
+
 }

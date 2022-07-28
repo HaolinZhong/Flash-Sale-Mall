@@ -4,6 +4,7 @@ import hz.mall.flashsale.converter.ItemConverter;
 import hz.mall.flashsale.domain.Item;
 import hz.mall.flashsale.domain.ItemDo;
 import hz.mall.flashsale.domain.ItemStockDo;
+import hz.mall.flashsale.domain.Promo;
 import hz.mall.flashsale.error.BusinessErrEnum;
 import hz.mall.flashsale.error.BusinessException;
 import hz.mall.flashsale.mapper.ItemDoMapper;
@@ -22,6 +23,8 @@ public class ItemServiceImpl implements ItemService {
     private final ItemConverter itemConverter;
     private final ItemDoMapper itemDoMapper;
     private final ItemStockDoMapper itemStockDoMapper;
+
+    private final PromoService promoService;
 
     @Override
     @Transactional
@@ -56,6 +59,13 @@ public class ItemServiceImpl implements ItemService {
         if (itemDo == null) return null;
         ItemStockDo itemStockDo = itemStockDoMapper.selectByItemId(itemDo.getId());
         Item item = itemConverter.DoToItem(itemDo, itemStockDo);
+
+        // get promo information related to the item
+        Promo promo = promoService.getPromoByItemId(item.getId());
+        if (promo != null && promo.getStatus() != 3) {
+            item.setPromo(promo);
+        }
+
         return item;
     }
 

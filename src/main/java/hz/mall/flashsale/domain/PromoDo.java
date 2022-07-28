@@ -1,5 +1,7 @@
 package hz.mall.flashsale.domain;
 
+import lombok.Builder;
+
 import java.util.Date;
 
 public class PromoDo {
@@ -29,6 +31,8 @@ public class PromoDo {
      * @mbg.generated Wed Jul 27 23:17:27 EDT 2022
      */
     private Date startDate;
+
+    private Date endDate;
 
     /**
      *
@@ -118,6 +122,15 @@ public class PromoDo {
      */
     public void setStartDate(Date startDate) {
         this.startDate = startDate;
+    }
+
+
+    public Date getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(Date endDate) {
+        this.endDate = endDate;
     }
 
     /**
