@@ -1,0 +1,7 @@
+flash-sale-mall:
+  image: hz2771/flashsale:0.0.1-SNAPSHOT
+  ports:
+    - 8080:8080
+  environment:
+    SPRING_DATASOURCE_URL: jdbc:mysql://root:mysqlpw@host.docker.internal:49155/flash_sale?useUnicode=true&characterEncoding=UTF-8
+  restart: on-failure
