@@ -16,6 +16,8 @@
     <properties>
         <java.version>11</java.version>
         <mapstruct.version>1.5.1.Final</mapstruct.version>
+        <docker.image.prefix>hz2771</docker.image.prefix>
+        <docker.image.name>${project.artifactId}</docker.image.name>
     </properties>
     <dependencies>
         <dependency>
@@ -143,6 +145,56 @@
                         <compilerArg>-Amapstruct.defaultComponentModel=spring</compilerArg>
                     </compilerArgs>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>io.fabric8</groupId>
+                <artifactId>docker-maven-plugin</artifactId>
+                <version>0.40.0</version>
+                <configuration>
+                    <!--
+                        Mac and Windows WSL 2 users can connect to the Docker Engine through a Unix socket: unix:///var/run/docker.sock
+                        Docker Desktop Windows users can connect to the Docker Engine through a named pipe: npipe:////./pipe/docker_engine,
+                        or TCP socket at this URL: tcp://localhost:2375.
+                    -->
+                    <dockerHost>npipe:////./pipe/docker_engine</dockerHost>
+                    <verbose>true</verbose>
+                    <images>
+                        <image>
+                            <name>${docker.image.prefix}/${docker.image.name}</name>
+                            <alias>${project.artifactId}</alias>
+                            <build>
+                                <!-- copies artifact to docker build dir in target -->
+                                <assembly>
+                                    <descriptorRef>artifact</descriptorRef>
+                                </assembly>
+                                <dockerFile>Dockerfile</dockerFile>
+                                <tags>
+                                    <tag>latest</tag>
+                                    <tag>${project.version}</tag>
+                                </tags>
+                            </build>
+                        </image>
+                    </images>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.2-beta-5</version>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>assemble-all</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
