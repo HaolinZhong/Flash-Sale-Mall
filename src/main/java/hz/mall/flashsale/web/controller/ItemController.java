@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/item")
 @CrossOrigin(allowCredentials="true", allowedHeaders = "*", originPatterns = "*")
 @Validated
-public class ItemController extends BaseController {
+public class ItemController {
 
     private final ItemService itemService;
     private final ItemConverter itemConverter;

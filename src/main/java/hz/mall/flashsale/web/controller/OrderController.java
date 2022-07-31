@@ -21,7 +21,7 @@ import javax.validation.constraints.NotNull;
 @RequestMapping("/order")
 @CrossOrigin(allowCredentials="true", allowedHeaders = "*", originPatterns = "*")
 @Validated
-public class OrderController extends BaseController {
+public class OrderController {
 
     private final OrderService orderService;
     private final HttpServletRequest httpServletRequest;

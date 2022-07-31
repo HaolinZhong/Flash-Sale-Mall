@@ -33,7 +33,7 @@ import java.util.Random;
 @RequestMapping("/user")
 @CrossOrigin(allowCredentials="true", allowedHeaders = "*", originPatterns = "*")
 @Validated
-public class UserController extends BaseController {
+public class UserController {
 
     private final UserConverter userConverter;
     private final UserService userService;
