@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Create Item</title>
+    <title>Item</title>
     <link href="static/assets/global/plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css"/>
     <link href="static/assets/global/css/components.css" rel="stylesheet" type="text/css"/>
     <link href="static/assets/admin/pages/css/login.css" rel="stylesheet" type="text/css"/>
@@ -126,7 +126,7 @@
 
         $.ajax({
             type: "GET",
-            url: "http://localhost:8080/item/get",
+            url: `http://${host}/item/get`,
             data: {
                 "id": getParam("id")
             },

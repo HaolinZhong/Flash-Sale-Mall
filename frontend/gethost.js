@@ -1,1 +1,2 @@
-let host = "localhost: 8090";
+let host = "54.236.40.228:80";
+export default host;
