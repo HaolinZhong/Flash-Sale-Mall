@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.tomcat.util.security.MD5Encoder;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
@@ -22,10 +23,8 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RestController
@@ -38,6 +37,7 @@ public class UserController {
     private final UserConverter userConverter;
     private final UserService userService;
     private final HttpServletRequest httpServletRequest;
+    private final RedisTemplate redisTemplate;
 
     @GetMapping("/get")
     @ResponseBody
@@ -125,9 +125,19 @@ public class UserController {
                                   @NotBlank @RequestParam(name = "password") String password) throws UnsupportedEncodingException, NoSuchAlgorithmException, BusinessException {
 
         User user = userService.validateLogin(tel, encryptByMd5(password));
-        httpServletRequest.getSession().setAttribute("IS_LOGIN", true);
-        httpServletRequest.getSession().setAttribute("LOGIN_USER", user);
-        return CommonReturnType.builder().status("success").build();
+
+        // update: use redis to store login information & token
+        //        httpServletRequest.getSession().setAttribute("IS_LOGIN", true);
+        //        httpServletRequest.getSession().setAttribute("LOGIN_USER", user);
+
+        // generate token (an UUID)
+        String token = UUID.randomUUID().toString();
+
+        // associate token and user login status
+        redisTemplate.opsForValue().set(token, user);
+        redisTemplate.expire(token, 1, TimeUnit.HOURS);
+
+        return CommonReturnType.builder().status("success").data(token).build();
     }
 
     private String encryptByMd5(String password) throws NoSuchAlgorithmException, UnsupportedEncodingException {
