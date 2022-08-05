@@ -73,6 +73,8 @@
                 success:function(data){
                     if(data.status == "success"){
                         alert("Login successed!");
+                        let token = data.data;
+                        window.localStorage["token"] = token;
                         window.location.href="listItem.html";
                     }else{
                         alert("Login failed due to error: "+data.data.errMsg);

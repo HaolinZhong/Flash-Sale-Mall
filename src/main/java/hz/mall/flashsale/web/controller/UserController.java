@@ -67,9 +67,7 @@ public class UserController {
         // never do this in real world application for privacy issue!
         log.info("Message sent to tel " + tel + ", otp: " + otpCode);
 
-
-
-        return CommonReturnType.builder().status("success").data(null).build();
+        return CommonReturnType.builder().status("success").data(otpCode).build();
     }
 
     @PostMapping(path = "/register", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
@@ -131,7 +129,7 @@ public class UserController {
         //        httpServletRequest.getSession().setAttribute("LOGIN_USER", user);
 
         // generate token (an UUID)
-        String token = UUID.randomUUID().toString();
+        String token = UUID.randomUUID().toString().replace("-", "");
 
         // associate token and user login status
         redisTemplate.opsForValue().set(token, user);

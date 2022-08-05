@@ -94,9 +94,17 @@
 
     jQuery(document).ready(function () {
         $("#createorder").on("click", function (){
+
+            let token = window.localStorage["token"];
+            if (token == null) {
+                alert("Please login before creating your order");
+                window.location.href="login.html";
+                return false;
+            }
+
             $.ajax({
                 type: "POST",
-                url: `http://${host}/order/create`,
+                url: `http://${host}/order/create?token=${token}`,
                 contentType:"application/x-www-form-urlencoded",
                 data: {
                     "itemId": itemVO.id,
@@ -109,7 +117,6 @@
                         alert("order successfully created!");
                         window.location.reload();
                     } else {
-                        alert("http success but data failed");
                         alert("Failed to create order due to error: " + data.data.errMsg);
                         if (data.data.errCode == 20003) {
                             window.location.href="login.html";
@@ -117,7 +124,6 @@
                     }
                 },
                 error: function (data) {
-                    alert("http failed");
                     alert("Failed to create order due to error: " + data.responseText);
                 }
             });

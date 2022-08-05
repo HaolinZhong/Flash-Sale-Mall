@@ -8,6 +8,8 @@ import hz.mall.flashsale.service.OrderService;
 import hz.mall.flashsale.web.model.CommonReturnType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +27,7 @@ public class OrderController {
 
     private final OrderService orderService;
     private final HttpServletRequest httpServletRequest;
+    private final RedisTemplate redisTemplate;
 
     @PostMapping(value = "/create", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public CommonReturnType createOrder(
@@ -34,13 +37,12 @@ public class OrderController {
     ) throws BusinessException {
 
         // get user login information
-        Boolean isLogin = (Boolean) httpServletRequest.getSession().getAttribute("IS_LOGIN");
-        if (isLogin == null || !isLogin.booleanValue()) {
-            throw new BusinessException(BusinessErrEnum.USER_NOT_LOGIN, "user has not login");
-        }
+        String token = httpServletRequest.getParameterMap().get("token")[0];
+        if (StringUtils.isEmpty(token)) throw new BusinessException(BusinessErrEnum.USER_NOT_LOGIN, "user has not login");
 
         // get user information
-        User user = (User) httpServletRequest.getSession().getAttribute("LOGIN_USER");
+        User user = (User) redisTemplate.opsForValue().get(token);
+        if (user == null) throw new BusinessException(BusinessErrEnum.USER_NOT_LOGIN, "user has not login");
 
         Order order= orderService.createOrder(user.getId(), itemId, amount, promoId);
 

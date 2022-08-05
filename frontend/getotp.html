@@ -51,6 +51,7 @@
                 success:function(data){
                     if(data.status == "success"){
                         alert("Code sended!");
+                        alert(`[Dev Mode Only] Your code is ${data.data}`);
                         window.location.href="register.html";
                     }else{
                         alert("Failed to send due to error: "+data.data.errMsg);
