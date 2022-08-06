@@ -3,6 +3,7 @@ package hz.mall.flashsale.web.controller;
 import hz.mall.flashsale.converter.ItemConverter;
 import hz.mall.flashsale.domain.Item;
 import hz.mall.flashsale.error.BusinessException;
+import hz.mall.flashsale.service.CacheService;
 import hz.mall.flashsale.service.ItemService;
 import hz.mall.flashsale.web.model.CommonReturnType;
 import hz.mall.flashsale.web.model.ItemVo;
@@ -31,6 +32,7 @@ public class ItemController {
     private final ItemService itemService;
     private final ItemConverter itemConverter;
     private final RedisTemplate redisTemplate;
+    private final CacheService cacheService;
 
     @PostMapping("/create")
     @ResponseBody
@@ -71,15 +73,25 @@ public class ItemController {
     @ResponseBody
     public CommonReturnType getItem(@RequestParam("id") Integer id) {
 
-        // get item by id from redis at first
-        Item item = (Item) redisTemplate.opsForValue().get("item_" + id);
+        // get item from local cache at first
+        Item item = (Item) cacheService.getCommonCache("item_" + id);
 
-        // if item not exist in redis
+        // if item not exist in cache
         if (item == null) {
-            item = itemService.getItemById(id);
-            // store item into redis
-            redisTemplate.opsForValue().set("item_" + id, item);
-            redisTemplate.expire("item_" + id, 10, TimeUnit.MINUTES);
+
+            // then get item from redis
+            item = (Item) redisTemplate.opsForValue().get("item_" + id);
+
+            // if item not exist in redis
+            if (item == null) {
+                item = itemService.getItemById(id);
+                // store item into redis
+                redisTemplate.opsForValue().set("item_" + id, item);
+                redisTemplate.expire("item_" + id, 10, TimeUnit.MINUTES);
+            }
+
+            // store into local cache
+            cacheService.setCommonCache("item_" + id, item);
         }
 
         ItemVo itemVo = itemConverter.itemToItemVo(item);
