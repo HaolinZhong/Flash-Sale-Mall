@@ -7,6 +7,7 @@ import hz.mall.flashsale.service.ItemService;
 import hz.mall.flashsale.web.model.CommonReturnType;
 import hz.mall.flashsale.web.model.ItemVo;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +18,7 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -28,6 +30,7 @@ public class ItemController {
 
     private final ItemService itemService;
     private final ItemConverter itemConverter;
+    private final RedisTemplate redisTemplate;
 
     @PostMapping("/create")
     @ResponseBody
@@ -67,7 +70,18 @@ public class ItemController {
     @GetMapping(value = "/get")
     @ResponseBody
     public CommonReturnType getItem(@RequestParam("id") Integer id) {
-        Item item = itemService.getItemById(id);
+
+        // get item by id from redis at first
+        Item item = (Item) redisTemplate.opsForValue().get("item_" + id);
+
+        // if item not exist in redis
+        if (item == null) {
+            item = itemService.getItemById(id);
+            // store item into redis
+            redisTemplate.opsForValue().set("item_" + id, item);
+            redisTemplate.expire("item_" + id, 10, TimeUnit.MINUTES);
+        }
+
         ItemVo itemVo = itemConverter.itemToItemVo(item);
 
         return CommonReturnType.builder().status("success").data(itemVo).build();

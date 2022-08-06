@@ -2,6 +2,7 @@ package hz.mall.flashsale.domain;
 
 import lombok.*;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 @Getter
@@ -9,7 +10,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Item {
+public class Item implements Serializable {
 
     private Integer id;
 
