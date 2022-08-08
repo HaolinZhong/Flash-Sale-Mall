@@ -8,6 +8,8 @@ public interface UserService {
 
     User getUserById(Integer userId);
 
+    User getUserByIdInCache(Integer userId);
+
     void register(User user) throws BusinessException;
 
     User validateLogin(String tel, String encryptPassword) throws BusinessException;

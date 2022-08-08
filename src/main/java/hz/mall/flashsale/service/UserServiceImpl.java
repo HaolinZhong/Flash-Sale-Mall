@@ -13,8 +13,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -24,6 +27,7 @@ public class UserServiceImpl implements UserService {
     private final UserDoMapper userDoMapper;
     private final UserPasswordDoMapper userPasswordDoMapper;
     private final UserConverter userConverter;
+    private final RedisTemplate redisTemplate;
 
     @Override
     public User getUserById(Integer userId) {
@@ -35,6 +39,17 @@ public class UserServiceImpl implements UserService {
         UserPasswordDo userPasswordDo = userPasswordDoMapper.selectByUserId(userDo.getId());
 
         return userConverter.DoToUser(userDo, userPasswordDo);
+    }
+
+    @Override
+    public User getUserByIdInCache(Integer userId) {
+        User user = (User) redisTemplate.opsForValue().get("user_validate_" + userId);
+        if (user == null) {
+            user = getUserById(userId);
+            redisTemplate.opsForValue().set("user_validate_" + userId, user);
+            redisTemplate.expire("user_validate_" + userId, 10, TimeUnit.MINUTES);
+        }
+        return user;
     }
 
     @Transactional

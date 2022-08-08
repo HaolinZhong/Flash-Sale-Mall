@@ -32,12 +32,12 @@ public class OrderServiceImpl implements OrderService {
     public Order createOrder(Integer userId, Integer itemId, Integer amount, Integer promoId) throws BusinessException {
 
         // 1. validation
-        Item item = itemService.getItemById(itemId);
+        Item item = itemService.getItemByIdInCache(itemId);
         if (item == null) {
             throw new BusinessException(BusinessErrEnum.PARAMETER_VALIDATION_ERROR, "invalid item information");
         }
 
-        User user = userService.getUserById(userId);
+        User user = userService.getUserByIdInCache(userId);
         if (user == null) {
             throw new BusinessException(BusinessErrEnum.PARAMETER_VALIDATION_ERROR, "invalid user information");
         }

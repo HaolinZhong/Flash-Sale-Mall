@@ -13,6 +13,8 @@ public interface ItemService {
 
     Item getItemById(Integer id);
 
+    Item getItemByIdInCache(Integer id);
+
     boolean decreaseStock(Integer itemId, Integer amount);
 
     void increaseSales(Integer itemId, Integer amount);

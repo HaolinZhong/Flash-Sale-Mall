@@ -10,10 +10,12 @@ import hz.mall.flashsale.error.BusinessException;
 import hz.mall.flashsale.mapper.ItemDoMapper;
 import hz.mall.flashsale.mapper.ItemStockDoMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -23,8 +25,8 @@ public class ItemServiceImpl implements ItemService {
     private final ItemConverter itemConverter;
     private final ItemDoMapper itemDoMapper;
     private final ItemStockDoMapper itemStockDoMapper;
-
     private final PromoService promoService;
+    private final RedisTemplate redisTemplate;
 
     @Override
     @Transactional
@@ -66,6 +68,17 @@ public class ItemServiceImpl implements ItemService {
             item.setPromo(promo);
         }
 
+        return item;
+    }
+
+    @Override
+    public Item getItemByIdInCache(Integer id) {
+        Item item = (Item) redisTemplate.opsForValue().get("item_validate_" + id);
+        if (item == null) {
+            item = getItemById(id);
+            redisTemplate.opsForValue().set("item_validate_" + id, item);
+            redisTemplate.expire("item_validate_" + id, 10, TimeUnit.MINUTES);
+        }
         return item;
     }
 
