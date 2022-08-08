@@ -1,11 +1,13 @@
 package hz.mall.flashsale.service;
 
 import hz.mall.flashsale.converter.PromoConverter;
+import hz.mall.flashsale.domain.Item;
 import hz.mall.flashsale.domain.Promo;
 import hz.mall.flashsale.domain.PromoDo;
 import hz.mall.flashsale.mapper.PromoDoMapper;
 import lombok.RequiredArgsConstructor;
 import org.joda.time.DateTime;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 @RequiredArgsConstructor
@@ -14,6 +16,8 @@ public class PromoServiceImpl implements PromoService {
 
     private final PromoConverter promoConverter;
     private final PromoDoMapper promoDoMapper;
+    private final ItemService itemService;
+    private final RedisTemplate redisTemplate;
 
 
     @Override
@@ -37,6 +41,17 @@ public class PromoServiceImpl implements PromoService {
         }
 
         return promo;
+    }
+
+    @Override
+    public void publishPromo(Integer promoId) {
+        PromoDo promoDo = promoDoMapper.selectByPrimaryKey(promoId);
+        if (promoDo.getItemId() == null || promoDo.getItemId().intValue() == 0) {
+            return;
+        }
+        Item item = itemService.getItemById(promoDo.getItemId());
+
+        redisTemplate.opsForValue().set("promo_item_stock_" + item.getId(), item.getStock());
     }
 
 

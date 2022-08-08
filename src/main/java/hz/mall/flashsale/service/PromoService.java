@@ -6,4 +6,6 @@ public interface PromoService {
 
     // get ongoing or incoming flash sale event
     Promo getPromoByItemId(Integer itemId);
+
+    void publishPromo(Integer promoId);
 }
