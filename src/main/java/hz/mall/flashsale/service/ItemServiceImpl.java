@@ -1,14 +1,13 @@
 package hz.mall.flashsale.service;
 
 import hz.mall.flashsale.converter.ItemConverter;
-import hz.mall.flashsale.domain.Item;
-import hz.mall.flashsale.domain.ItemDo;
-import hz.mall.flashsale.domain.ItemStockDo;
-import hz.mall.flashsale.domain.Promo;
+import hz.mall.flashsale.domain.*;
 import hz.mall.flashsale.error.BusinessErrEnum;
 import hz.mall.flashsale.error.BusinessException;
 import hz.mall.flashsale.mapper.ItemDoMapper;
 import hz.mall.flashsale.mapper.ItemStockDoMapper;
+import hz.mall.flashsale.mapper.PromoDoMapper;
+import hz.mall.flashsale.mq.DecreaseStockProducer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -26,7 +25,10 @@ public class ItemServiceImpl implements ItemService {
     private final ItemDoMapper itemDoMapper;
     private final ItemStockDoMapper itemStockDoMapper;
     private final PromoService promoService;
+    private final PromoDoMapper promoDoMapper;
     private final RedisTemplate redisTemplate;
+    private final DecreaseStockProducer producer;
+
 
     @Override
     @Transactional
@@ -72,6 +74,17 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
+    public void publishPromo(Integer promoId) {
+        PromoDo promoDo = promoDoMapper.selectByPrimaryKey(promoId);
+        if (promoDo.getItemId() == null || promoDo.getItemId().intValue() == 0) {
+            return;
+        }
+        Item item = getItemById(promoDo.getItemId());
+
+        redisTemplate.opsForValue().set("promo_item_stock_" + item.getId(), item.getStock());
+    }
+
+    @Override
     public Item getItemByIdInCache(Integer id) {
         Item item = (Item) redisTemplate.opsForValue().get("item_validate_" + id);
         if (item == null) {
@@ -85,8 +98,24 @@ public class ItemServiceImpl implements ItemService {
     @Override
     @Transactional
     public boolean decreaseStock(Integer itemId, Integer amount) {
-        int nRowAffected = itemStockDoMapper.decreaseStock(itemId, amount);
-        return nRowAffected > 0;
+        long result = redisTemplate.opsForValue().increment("promo_item_stock_" + itemId, amount.intValue() * -1);
+        if (result < 0) {
+            redisTemplate.opsForValue().increment("promo_item_stock_" + itemId, amount.intValue());
+            return false;
+        }
+
+        boolean mqResult = asyncDecreaseStock(itemId, amount);
+        if (!mqResult) {
+            redisTemplate.opsForValue().increment("promo_item_stock_" + itemId, amount.intValue());
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean asyncDecreaseStock(Integer itemId, Integer amount)  {
+        return producer.asyncReduceStock(itemId,amount);
     }
 
     @Override

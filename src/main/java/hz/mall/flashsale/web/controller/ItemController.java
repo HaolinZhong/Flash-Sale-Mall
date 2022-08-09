@@ -114,7 +114,7 @@ public class ItemController {
     @GetMapping(value = "/publishpromo")
     @ResponseBody
     public CommonReturnType publishPromo(@RequestParam(name = "id") Integer id) {
-        promoService.publishPromo(id);
+        itemService.publishPromo(id);
         return CommonReturnType.builder().status("success").build();
     }
 }
