@@ -10,7 +10,7 @@
     <context id="DB2Tables" targetRuntime="MyBatis3">
 
         <jdbcConnection driverClass="com.mysql.cj.jdbc.Driver"
-                        connectionURL="jdbc:mysql://localhost:49153/flash_sale?serverTimezone=UTC"
+                        connectionURL="jdbc:mysql://44.207.4.181:3306/flash_sale?serverTimezone=UTC"
                         userId="root"
                         password="mysqlpw">
         </jdbcConnection>
@@ -77,7 +77,14 @@
 <!--               enableSelectByExample="false"-->
 <!--               selectByExampleQueryId="false"-->
 <!--        />-->
-        <table tableName="promo" domainObjectName="PromoDo"
+<!--        <table tableName="promo" domainObjectName="PromoDo"-->
+<!--               enableCountByExample="false"-->
+<!--               enableUpdateByExample="false"-->
+<!--               enableDeleteByExample="false"-->
+<!--               enableSelectByExample="false"-->
+<!--               selectByExampleQueryId="false"-->
+<!--        />-->
+        <table tableName="stock_log" domainObjectName="StockLogDo"
                enableCountByExample="false"
                enableUpdateByExample="false"
                enableDeleteByExample="false"

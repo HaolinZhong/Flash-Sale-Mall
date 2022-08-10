@@ -7,6 +7,7 @@ import hz.mall.flashsale.error.BusinessException;
 import hz.mall.flashsale.mapper.ItemDoMapper;
 import hz.mall.flashsale.mapper.ItemStockDoMapper;
 import hz.mall.flashsale.mapper.PromoDoMapper;
+import hz.mall.flashsale.mapper.StockLogDoMapper;
 import hz.mall.flashsale.mq.DecreaseStockProducer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -28,6 +30,7 @@ public class ItemServiceImpl implements ItemService {
     private final PromoDoMapper promoDoMapper;
     private final RedisTemplate redisTemplate;
     private final DecreaseStockProducer producer;
+    private final StockLogDoMapper stockLogDoMapper;
 
 
     @Override
@@ -97,30 +100,51 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     @Transactional
-    public boolean decreaseStock(Integer itemId, Integer amount) {
+    public boolean decreaseStock(Integer itemId, Integer amount) throws BusinessException {
         long result = redisTemplate.opsForValue().increment("promo_item_stock_" + itemId, amount.intValue() * -1);
-        if (result < 0) {
-            redisTemplate.opsForValue().increment("promo_item_stock_" + itemId, amount.intValue());
-            return false;
+
+        if (result > 0) return true;
+
+        // item sold out
+        if (result == 0) {
+            // mark the item stock as ran out
+            redisTemplate.opsForValue().set("promo_item_stock_invalid_" + itemId, "true");
+            return true;
         }
 
-        boolean mqResult = asyncDecreaseStock(itemId, amount);
-        if (!mqResult) {
-            redisTemplate.opsForValue().increment("promo_item_stock_" + itemId, amount.intValue());
-            return false;
-        }
+        // not enough stock, add the amount back
+        increaseStock(itemId, amount);
+        return false;
+    }
 
+    @Override
+    public boolean increaseStock(Integer itemId, Integer amount) throws BusinessException {
+        redisTemplate.opsForValue().increment("promo_item_stock_" + itemId, amount.intValue());
         return true;
     }
 
     @Override
-    public boolean asyncDecreaseStock(Integer itemId, Integer amount)  {
-        return producer.asyncReduceStock(itemId,amount);
+    public boolean asyncDecreaseStock(Integer itemId, Integer amount) {
+        return producer.asyncReduceStock(itemId, amount);
     }
 
     @Override
     @Transactional
     public void increaseSales(Integer itemId, Integer amount) {
         itemDoMapper.increaseSales(itemId, amount);
+    }
+
+    @Override
+    @Transactional
+    public String initStockLog(Integer itemId, Integer amount) {
+        StockLogDo stockLogDO = new StockLogDo();
+        stockLogDO.setItemId(itemId);
+        stockLogDO.setAmount(amount);
+        stockLogDO.setStockLogId(UUID.randomUUID().toString().replace("-",""));
+        stockLogDO.setStatus(1);
+
+        stockLogDoMapper.insertSelective(stockLogDO);
+
+        return stockLogDO.getStockLogId();
     }
 }

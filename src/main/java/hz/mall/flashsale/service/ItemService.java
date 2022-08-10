@@ -20,9 +20,13 @@ public interface ItemService {
 
     void publishPromo(Integer promoId);
 
-    boolean decreaseStock(Integer itemId, Integer amount);
+    boolean decreaseStock(Integer itemId, Integer amount) throws BusinessException;
 
     boolean asyncDecreaseStock(Integer itemId, Integer amount) throws InterruptedException, RemotingException, MQClientException, MQBrokerException;
 
     void increaseSales(Integer itemId, Integer amount);
+
+    String initStockLog(Integer itemId, Integer amount);
+
+    boolean increaseStock(Integer itemId, Integer amount) throws BusinessException;
 }

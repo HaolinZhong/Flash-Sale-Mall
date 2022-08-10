@@ -4,11 +4,14 @@ import hz.mall.flashsale.domain.Order;
 import hz.mall.flashsale.domain.User;
 import hz.mall.flashsale.error.BusinessErrEnum;
 import hz.mall.flashsale.error.BusinessException;
+import hz.mall.flashsale.mq.DecreaseStockProducer;
+import hz.mall.flashsale.service.ItemService;
 import hz.mall.flashsale.service.OrderService;
 import hz.mall.flashsale.web.model.CommonReturnType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.rocketmq.client.producer.MQProducer;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
@@ -21,13 +24,15 @@ import javax.validation.constraints.NotNull;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/order")
-@CrossOrigin(allowCredentials="true", allowedHeaders = "*", originPatterns = "*")
+@CrossOrigin(allowCredentials = "true", allowedHeaders = "*", originPatterns = "*")
 @Validated
 public class OrderController {
 
     private final OrderService orderService;
     private final HttpServletRequest httpServletRequest;
     private final RedisTemplate redisTemplate;
+    private final ItemService itemService;
+    private final DecreaseStockProducer decreaseStockProducer;
 
     @PostMapping(value = "/create", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public CommonReturnType createOrder(
@@ -38,13 +43,32 @@ public class OrderController {
 
         // get user login information
         String token = httpServletRequest.getParameterMap().get("token")[0];
-        if (StringUtils.isEmpty(token)) throw new BusinessException(BusinessErrEnum.USER_NOT_LOGIN, "user has not login");
+        if (StringUtils.isEmpty(token))
+            throw new BusinessException(BusinessErrEnum.USER_NOT_LOGIN, "user has not login");
 
         // get user information
         User user = (User) redisTemplate.opsForValue().get(token);
         if (user == null) throw new BusinessException(BusinessErrEnum.USER_NOT_LOGIN, "user has not login");
 
-        Order order= orderService.createOrder(user.getId(), itemId, amount, promoId);
+        // determine whether stock has ran out by ran out key
+        if (redisTemplate.hasKey("promo_item_stock_invalid_" + itemId)) {
+            throw new BusinessException(BusinessErrEnum.STOCK_NOT_ENOUGH);
+        }
+
+        // init a stock log into db for facilitating data consistency
+        String stockLogId = itemService.initStockLog(itemId, amount);
+
+        /**
+         * place the order by transactional async message
+         *
+         * upon sending of the message, producer will execute the transaction of creating an order
+         * logic inside ensured final consistency of stock data
+         *
+         * returns a boolean suggesting successful creation of order and commit of transaction
+         */
+        boolean result = decreaseStockProducer.transactionAsyncReduceStock(user.getId(), itemId, promoId, amount, stockLogId);
+
+        if (!result) throw new BusinessException(BusinessErrEnum.UNKNOW_ERROR, "failed to create order");
 
         return CommonReturnType.builder().status("success").build();
     }

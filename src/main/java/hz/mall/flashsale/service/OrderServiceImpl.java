@@ -6,7 +6,7 @@ import hz.mall.flashsale.error.BusinessErrEnum;
 import hz.mall.flashsale.error.BusinessException;
 import hz.mall.flashsale.mapper.OrderDoMapper;
 import hz.mall.flashsale.mapper.SequenceDoMapper;
-import lombok.Data;
+import hz.mall.flashsale.mapper.StockLogDoMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -15,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
 
 @RequiredArgsConstructor
 @Service
@@ -26,10 +25,22 @@ public class OrderServiceImpl implements OrderService {
     private final UserService userService;
     private final OrderDoMapper orderDoMapper;
     private final SequenceDoMapper sequenceDoMapper;
+    private final StockLogDoMapper stockLogDoMapper;
 
     @Override
     @Transactional
-    public Order createOrder(Integer userId, Integer itemId, Integer amount, Integer promoId) throws BusinessException {
+    public Order createOrder(Integer userId, Integer itemId, Integer amount, Integer promoId, String stockLogId) throws BusinessException {
+
+        /**
+         * The function will be used when producer send transaction message of synchronizing db & cache item stock.
+         * It has 4 steps:
+         *  1. validate args
+         *  2. decrease stock in cache
+         *  3. create an order and persists it into db
+         *  4. set stock log status to success
+         *
+         */
+
 
         // 1. validation
         Item item = itemService.getItemByIdInCache(itemId);
@@ -56,12 +67,13 @@ public class OrderServiceImpl implements OrderService {
             }
         }
 
-        // 2. decrease stock when an order was placed (instead of decreasing when paid)
+        // 2. decrease stock (in cache) when an order was placed (instead of decreasing when paid)
         boolean assigned = itemService.decreaseStock(itemId, amount);
 
         if (!assigned) throw new BusinessException(BusinessErrEnum.STOCK_NOT_ENOUGH);
 
-        // 3. persist order
+        // 3. persist order, ensure consistency of stock in cache & stock in db
+
         Order.OrderBuilder orderBuilder = Order.builder()
                 .userId(userId)
                 .itemId(itemId)
@@ -84,7 +96,12 @@ public class OrderServiceImpl implements OrderService {
 
         itemService.increaseSales(itemId, amount); // increase sales of the item
 
-        // 4. return to frontend
+        // 4. set stock log status to 2 (success)
+        StockLogDo stockLogDo = stockLogDoMapper.selectByPrimaryKey(stockLogId);
+        if (stockLogDo == null) throw new BusinessException(BusinessErrEnum.UNKNOW_ERROR);
+        stockLogDo.setStatus(2);
+        stockLogDoMapper.updateByPrimaryKeySelective(stockLogDo);
+
         return order;
     }
 
@@ -100,7 +117,7 @@ public class OrderServiceImpl implements OrderService {
 
         // first 8 digits should be date
         LocalDateTime now = LocalDateTime.now();
-        sb.append(now.format(DateTimeFormatter.ISO_DATE).replace("-",""));
+        sb.append(now.format(DateTimeFormatter.ISO_DATE).replace("-", ""));
 
         // in the middle, 6 digits should be auto increment sequence
         int sequence = 0;
