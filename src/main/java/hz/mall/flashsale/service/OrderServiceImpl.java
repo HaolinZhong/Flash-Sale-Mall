@@ -8,6 +8,7 @@ import hz.mall.flashsale.mapper.OrderDoMapper;
 import hz.mall.flashsale.mapper.SequenceDoMapper;
 import hz.mall.flashsale.mapper.StockLogDoMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,16 +17,20 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-@RequiredArgsConstructor
+
 @Service
 public class OrderServiceImpl implements OrderService {
 
-    private final OrderConverter orderConverter;
-    private final ItemService itemService;
-    private final UserService userService;
-    private final OrderDoMapper orderDoMapper;
-    private final SequenceDoMapper sequenceDoMapper;
-    private final StockLogDoMapper stockLogDoMapper;
+    @Autowired
+    private OrderConverter orderConverter;
+    @Autowired
+    private ItemService itemService;
+    @Autowired
+    private OrderDoMapper orderDoMapper;
+    @Autowired
+    private SequenceDoMapper sequenceDoMapper;
+    @Autowired
+    private StockLogDoMapper stockLogDoMapper;
 
     @Override
     @Transactional
@@ -40,31 +45,10 @@ public class OrderServiceImpl implements OrderService {
          *  4. set stock log status to success
          *
          */
-
-
         // 1. validation
         Item item = itemService.getItemByIdInCache(itemId);
         if (item == null) {
             throw new BusinessException(BusinessErrEnum.PARAMETER_VALIDATION_ERROR, "invalid item information");
-        }
-
-        User user = userService.getUserByIdInCache(userId);
-        if (user == null) {
-            throw new BusinessException(BusinessErrEnum.PARAMETER_VALIDATION_ERROR, "invalid user information");
-        }
-
-        if (amount <= 0 || amount > 99) {
-            throw new BusinessException(BusinessErrEnum.PARAMETER_VALIDATION_ERROR, "invalid amount");
-        }
-
-        if (promoId != null) {
-            if (promoId.intValue() != item.getPromo().getId()) {
-                throw new BusinessException(BusinessErrEnum.PARAMETER_VALIDATION_ERROR, "invalid promo information");
-            }
-
-            if (item.getPromo().getStatus().intValue() != 2) {
-                throw new BusinessException(BusinessErrEnum.PARAMETER_VALIDATION_ERROR, "promo has not started");
-            }
         }
 
         // 2. decrease stock (in cache) when an order was placed (instead of decreasing when paid)

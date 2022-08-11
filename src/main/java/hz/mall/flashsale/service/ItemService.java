@@ -22,7 +22,7 @@ public interface ItemService {
 
     boolean decreaseStock(Integer itemId, Integer amount) throws BusinessException;
 
-    boolean asyncDecreaseStock(Integer itemId, Integer amount) throws InterruptedException, RemotingException, MQClientException, MQBrokerException;
+//    boolean asyncDecreaseStock(Integer itemId, Integer amount) throws InterruptedException, RemotingException, MQClientException, MQBrokerException;
 
     void increaseSales(Integer itemId, Integer amount);
 

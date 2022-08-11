@@ -10,6 +10,7 @@ import hz.mall.flashsale.mapper.PromoDoMapper;
 import hz.mall.flashsale.mapper.StockLogDoMapper;
 import hz.mall.flashsale.mq.DecreaseStockProducer;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,19 +20,24 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-@RequiredArgsConstructor
+
 @Service
 public class ItemServiceImpl implements ItemService {
 
-    private final ItemConverter itemConverter;
-    private final ItemDoMapper itemDoMapper;
-    private final ItemStockDoMapper itemStockDoMapper;
-    private final PromoService promoService;
-    private final PromoDoMapper promoDoMapper;
-    private final RedisTemplate redisTemplate;
-    private final DecreaseStockProducer producer;
-    private final StockLogDoMapper stockLogDoMapper;
-
+    @Autowired
+    private ItemConverter itemConverter;
+    @Autowired
+    private ItemDoMapper itemDoMapper;
+    @Autowired
+    private ItemStockDoMapper itemStockDoMapper;
+    @Autowired
+    private PromoService promoService;
+    @Autowired
+    private PromoDoMapper promoDoMapper;
+    @Autowired
+    private RedisTemplate redisTemplate;
+    @Autowired
+    private StockLogDoMapper stockLogDoMapper;
 
     @Override
     @Transactional
@@ -123,10 +129,10 @@ public class ItemServiceImpl implements ItemService {
         return true;
     }
 
-    @Override
-    public boolean asyncDecreaseStock(Integer itemId, Integer amount) {
-        return producer.asyncReduceStock(itemId, amount);
-    }
+//    @Override
+//    public boolean asyncDecreaseStock(Integer itemId, Integer amount) {
+//        return producer.asyncReduceStock(itemId, amount);
+//    }
 
     @Override
     @Transactional
@@ -147,4 +153,5 @@ public class ItemServiceImpl implements ItemService {
 
         return stockLogDO.getStockLogId();
     }
+
 }

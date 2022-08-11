@@ -4,19 +4,24 @@ import hz.mall.flashsale.converter.PromoConverter;
 import hz.mall.flashsale.domain.Item;
 import hz.mall.flashsale.domain.Promo;
 import hz.mall.flashsale.domain.PromoDo;
+import hz.mall.flashsale.domain.User;
 import hz.mall.flashsale.mapper.PromoDoMapper;
 import lombok.RequiredArgsConstructor;
 import org.joda.time.DateTime;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-@RequiredArgsConstructor
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
 @Service
 public class PromoServiceImpl implements PromoService {
 
-    private final PromoConverter promoConverter;
-    private final PromoDoMapper promoDoMapper;
-
+    @Autowired
+    private PromoConverter promoConverter;
+    @Autowired
+    private PromoDoMapper promoDoMapper;
 
     @Override
     public Promo getPromoByItemId(Integer itemId) {
@@ -29,7 +34,12 @@ public class PromoServiceImpl implements PromoService {
         Promo promo = promoConverter.promoDoToPromo(promoDo);
 
         // determine whether the promo is outdated or about to begin or ongoing
+        promo = setPromoStatus(promo);
 
+        return promo;
+    }
+
+    public Promo setPromoStatus(Promo promo) {
         if (promo.getStartDate().isAfterNow()) {
             promo.setStatus(1);
         } else if (promo.getEndDate().isBeforeNow()) {
@@ -40,8 +50,4 @@ public class PromoServiceImpl implements PromoService {
 
         return promo;
     }
-
-
-
-
 }

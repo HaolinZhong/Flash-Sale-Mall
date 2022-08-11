@@ -12,6 +12,7 @@ import org.apache.rocketmq.client.producer.*;
 import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.remoting.exception.RemotingException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -20,7 +21,6 @@ import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 
-@RequiredArgsConstructor
 @Component
 public class DecreaseStockProducer {
 
@@ -32,8 +32,10 @@ public class DecreaseStockProducer {
     @Value("${mq.topicname}")
     private String topicName;
 
-    private final OrderService orderService;
-    private final StockLogDoMapper stockLogDoMapper;
+    @Autowired
+    private OrderService orderService;
+    @Autowired
+    private StockLogDoMapper stockLogDoMapper;
 
     @PostConstruct
     public void init() throws MQClientException {
