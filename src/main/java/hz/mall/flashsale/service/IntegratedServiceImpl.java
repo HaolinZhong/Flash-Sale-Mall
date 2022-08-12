@@ -5,6 +5,8 @@ import hz.mall.flashsale.domain.Item;
 import hz.mall.flashsale.domain.Promo;
 import hz.mall.flashsale.domain.PromoDo;
 import hz.mall.flashsale.domain.User;
+import hz.mall.flashsale.error.BusinessErrEnum;
+import hz.mall.flashsale.error.BusinessException;
 import hz.mall.flashsale.mapper.PromoDoMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -28,7 +30,30 @@ public class IntegratedServiceImpl implements IntegratedService {
     private PromoConverter promoConverter;
 
     @Override
-    public String generateFlashSaleToken(Integer promoId, Integer itemId, Integer userId) {
+    public void publishPromo(Integer promoId) {
+        PromoDo promoDo = promoDoMapper.selectByPrimaryKey(promoId);
+        if (promoDo.getItemId() == null || promoDo.getItemId().intValue() == 0) {
+            return;
+        }
+        Item item = itemService.getItemById(promoDo.getItemId());
+
+        // set initial item stock in redis
+        redisTemplate.opsForValue().set("promo_item_stock_" + item.getId(), item.getStock());
+
+        // set access limit in redis
+        // e.g. for 100 stock, only 500 user can access
+        redisTemplate.opsForValue().set("promo_access_count_" + promoId, item.getStock().intValue() * 5);
+    }
+
+
+    @Override
+    public String generateFlashSaleToken(Integer promoId, Integer itemId, Integer userId) throws BusinessException {
+
+        // determine whether stock has ran out by ran out key
+        // if ran out, no token will be assigned to the incoming user
+        if (redisTemplate.hasKey("promo_item_stock_invalid_" + itemId)) {
+            return null;
+        }
 
         PromoDo promoDo = promoDoMapper.selectByPrimaryKey(promoId);
         if (promoDo == null) return null;
@@ -41,6 +66,11 @@ public class IntegratedServiceImpl implements IntegratedService {
 
         User user = userService.getUserByIdInCache(userId);
         if (user == null) return null;
+
+        // decrease access limit
+        // if limit deducted to less than 0, then no token will be assigned to the incoming user, making the user unable to purchase
+        long result = redisTemplate.opsForValue().increment("promo_access_limit_" + promoId, -1);
+        if (result < 0) return null;
 
         String token = UUID.randomUUID().toString().replace("-","");
 

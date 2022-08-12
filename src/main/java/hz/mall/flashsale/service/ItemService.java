@@ -18,7 +18,7 @@ public interface ItemService {
 
     Item getItemByIdInCache(Integer id);
 
-    void publishPromo(Integer promoId);
+//    void publishPromo(Integer promoId);
 
     boolean decreaseStock(Integer itemId, Integer amount) throws BusinessException;
 

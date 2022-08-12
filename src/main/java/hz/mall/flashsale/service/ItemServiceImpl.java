@@ -82,16 +82,6 @@ public class ItemServiceImpl implements ItemService {
         return item;
     }
 
-    @Override
-    public void publishPromo(Integer promoId) {
-        PromoDo promoDo = promoDoMapper.selectByPrimaryKey(promoId);
-        if (promoDo.getItemId() == null || promoDo.getItemId().intValue() == 0) {
-            return;
-        }
-        Item item = getItemById(promoDo.getItemId());
-
-        redisTemplate.opsForValue().set("promo_item_stock_" + item.getId(), item.getStock());
-    }
 
     @Override
     public Item getItemByIdInCache(Integer id) {

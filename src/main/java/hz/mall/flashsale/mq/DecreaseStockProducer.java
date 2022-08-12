@@ -46,7 +46,7 @@ public class DecreaseStockProducer {
 
         transactionProducer = new TransactionMQProducer("transaction_producer_group");
         transactionProducer.setNamesrvAddr(addr);
-        transactionProducer.start();
+
 
         transactionProducer.setTransactionListener(new TransactionListener() {
             // tasks triggered when message was sent
@@ -96,7 +96,7 @@ public class DecreaseStockProducer {
             }
         });
 
-
+        transactionProducer.start();
     }
 
     public boolean transactionAsyncReduceStock(Integer userId, Integer itemId, Integer promoId,

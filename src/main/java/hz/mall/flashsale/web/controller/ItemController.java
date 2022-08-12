@@ -4,6 +4,7 @@ import hz.mall.flashsale.converter.ItemConverter;
 import hz.mall.flashsale.domain.Item;
 import hz.mall.flashsale.error.BusinessException;
 import hz.mall.flashsale.service.CacheService;
+import hz.mall.flashsale.service.IntegratedService;
 import hz.mall.flashsale.service.ItemService;
 import hz.mall.flashsale.service.PromoService;
 import hz.mall.flashsale.web.model.CommonReturnType;
@@ -34,7 +35,7 @@ public class ItemController {
     private final ItemConverter itemConverter;
     private final RedisTemplate redisTemplate;
     private final CacheService cacheService;
-    private final PromoService promoService;
+    private final IntegratedService integratedService;
 
     @PostMapping("/create")
     @ResponseBody
@@ -114,7 +115,7 @@ public class ItemController {
     @GetMapping(value = "/publishpromo")
     @ResponseBody
     public CommonReturnType publishPromo(@RequestParam(name = "id") Integer id) {
-        itemService.publishPromo(id);
+        integratedService.publishPromo(id);
         return CommonReturnType.builder().status("success").build();
     }
 }

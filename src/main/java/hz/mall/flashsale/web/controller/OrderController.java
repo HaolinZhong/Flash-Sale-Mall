@@ -21,6 +21,9 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.NotNull;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -35,6 +38,7 @@ public class OrderController {
     private final ItemService itemService;
     private final IntegratedService integratedService;
     private final DecreaseStockProducer decreaseStockProducer;
+    private final ExecutorService executorService;
 
     @PostMapping(value = "/create", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public CommonReturnType createOrder(
@@ -61,10 +65,6 @@ public class OrderController {
             }
         }
 
-        // determine whether stock has ran out by ran out key
-        if (redisTemplate.hasKey("promo_item_stock_invalid_" + itemId)) {
-            throw new BusinessException(BusinessErrEnum.STOCK_NOT_ENOUGH);
-        }
 
         // init a stock log into db for facilitating data consistency
         String stockLogId = itemService.initStockLog(itemId, amount);
@@ -79,7 +79,7 @@ public class OrderController {
          */
         boolean result = decreaseStockProducer.transactionAsyncReduceStock(user.getId(), itemId, promoId, amount, stockLogId);
 
-        if (!result) throw new BusinessException(BusinessErrEnum.UNKNOW_ERROR, "failed to create order");
+        if (!result) throw new BusinessException(BusinessErrEnum.UNKNOW_ERROR, "failed to send create order message");
 
         return CommonReturnType.builder().status("success").build();
     }
@@ -102,7 +102,7 @@ public class OrderController {
         String promoToken = integratedService.generateFlashSaleToken(promoId, itemId, user.getId());
         if (promoToken == null) throw new BusinessException(BusinessErrEnum.PARAMETER_VALIDATION_ERROR, "failed to generate token");
 
-        return CommonReturnType.builder().status("success").build();
+        return CommonReturnType.builder().status("success").data(promoToken).build();
     }
 
 }

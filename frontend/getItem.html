@@ -104,29 +104,59 @@
 
             $.ajax({
                 type: "POST",
-                url: `http://${host}/order/create?token=${token}`,
+                url: `http://${host}/order/generatetoken?token=${token}`,
                 contentType:"application/x-www-form-urlencoded",
                 data: {
                     "itemId": itemVO.id,
-                    "amount": 1,
                     "promoId": itemVO.promoId
                 },
                 xhrFields: {withCredentials: true},
                 success: function (data) {
                     if (data.status == "success") {
-                        alert("order successfully created!");
-                        window.location.reload();
+                        let promoToken = data.data;
+
+                        $.ajax({
+                            type: "POST",
+                            url: `http://${host}/order/create?token=${token}`,
+                            contentType:"application/x-www-form-urlencoded",
+                            data: {
+                                "itemId": itemVO.id,
+                                "amount": 1,
+                                "promoId": itemVO.promoId,
+                                "promoToken": promoToken
+                            },
+                            xhrFields: {withCredentials: true},
+                            success: function (data) {
+                                if (data.status == "success") {
+                                    alert("order successfully created!");
+                                    window.location.reload();
+                                } else {
+                                    alert("Failed to create order due to error: " + data.data.errMsg);
+                                    if (data.data.errCode == 20003) {
+                                        window.location.href="login.html";
+                                    }
+                                }
+                            },
+                            error: function (data) {
+                                alert("Failed to create order due to error: " + data.responseText);
+                            }
+                        });
+
+
                     } else {
-                        alert("Failed to create order due to error: " + data.data.errMsg);
+                        alert("Failed to get token due to error: " + data.data.errMsg);
                         if (data.data.errCode == 20003) {
                             window.location.href="login.html";
                         }
                     }
                 },
                 error: function (data) {
-                    alert("Failed to create order due to error: " + data.responseText);
+                    alert("Failed to get token due to error: " + data.responseText);
                 }
             });
+
+
+
         })
 
 
