@@ -42,7 +42,7 @@ public class IntegratedServiceImpl implements IntegratedService {
 
         // set access limit in redis
         // e.g. for 100 stock, only 500 user can access
-        redisTemplate.opsForValue().set("promo_access_count_" + promoId, item.getStock().intValue() * 5);
+        redisTemplate.opsForValue().set("promo_access_limit_" + promoId, item.getStock().intValue() * 5);
     }
 
 

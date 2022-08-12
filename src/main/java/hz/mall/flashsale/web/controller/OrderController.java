@@ -1,5 +1,6 @@
 package hz.mall.flashsale.web.controller;
 
+import com.google.common.util.concurrent.RateLimiter;
 import hz.mall.flashsale.domain.Order;
 import hz.mall.flashsale.domain.User;
 import hz.mall.flashsale.error.BusinessErrEnum;
@@ -9,19 +10,26 @@ import hz.mall.flashsale.service.IntegratedService;
 import hz.mall.flashsale.service.ItemService;
 import hz.mall.flashsale.service.OrderService;
 import hz.mall.flashsale.service.PromoService;
+import hz.mall.flashsale.util.VerificationCodeUtil;
 import hz.mall.flashsale.web.model.CommonReturnType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.client.producer.MQProducer;
+import org.apache.rocketmq.remoting.protocol.RequestType;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
+import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.NotNull;
+import java.awt.image.RenderedImage;
+import java.io.IOException;
+import java.util.Map;
 import java.util.concurrent.*;
 
 @Slf4j
@@ -38,11 +46,12 @@ public class OrderController {
     private final IntegratedService integratedService;
     private final DecreaseStockProducer decreaseStockProducer;
     private ExecutorService executorService;
+    private RateLimiter orderCreateRateLimiter;
 
     @PostConstruct
     public void init(){
         executorService = Executors.newFixedThreadPool(20);
-
+        orderCreateRateLimiter = RateLimiter.create(300);
     }
 
     @PostMapping(value = "/create", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
@@ -52,6 +61,11 @@ public class OrderController {
             @RequestParam(value = "promoId", required = false) Integer promoId,
             @RequestParam(value = "promoToken", required = false) String promoToken
     ) throws BusinessException {
+
+        // limit rate
+        if(!orderCreateRateLimiter.tryAcquire()){
+            throw new BusinessException(BusinessErrEnum.RATE_LIMIT);
+        }
 
         // get user login information
         String token = httpServletRequest.getParameterMap().get("token")[0];
@@ -109,7 +123,8 @@ public class OrderController {
     @ResponseBody
     public CommonReturnType generateToken(
             @RequestParam(name = "itemId") Integer itemId,
-            @RequestParam(name = "promoId") Integer promoId
+            @RequestParam(name = "promoId") Integer promoId,
+            @RequestParam(name = "verifyCode") String verifyCode
     ) throws BusinessException {
         // get user login information
         String token = httpServletRequest.getParameterMap().get("token")[0];
@@ -120,10 +135,41 @@ public class OrderController {
         User user = (User) redisTemplate.opsForValue().get(token);
         if (user == null) throw new BusinessException(BusinessErrEnum.USER_NOT_LOGIN, "user has not login");
 
+        // get true verify code from redis to validate input verify code
+        String redisVerifyCode = (String) redisTemplate.opsForValue().get("verify_code_" + user.getId());
+        if(StringUtils.isEmpty(redisVerifyCode)){
+            throw new BusinessException(BusinessErrEnum.PARAMETER_VALIDATION_ERROR,"illegal request");
+        }
+        if(!redisVerifyCode.equalsIgnoreCase(verifyCode)){
+            throw new BusinessException(BusinessErrEnum.PARAMETER_VALIDATION_ERROR,"wrong verification code");
+        }
+
+
         String promoToken = integratedService.generateFlashSaleToken(promoId, itemId, user.getId());
         if (promoToken == null) throw new BusinessException(BusinessErrEnum.PARAMETER_VALIDATION_ERROR, "failed to generate token");
 
         return CommonReturnType.builder().status("success").data(promoToken).build();
+    }
+
+    @RequestMapping(value = "/generateverifycode", method = {RequestMethod.GET,RequestMethod.POST})
+    @ResponseBody
+    public void generateVerifyCode(HttpServletResponse response) throws BusinessException, IOException {
+        String token = httpServletRequest.getParameterMap().get("token")[0];
+        if(StringUtils.isEmpty(token)){
+            throw new BusinessException(BusinessErrEnum.USER_NOT_LOGIN,"user has not login");
+        }
+        User user = (User) redisTemplate.opsForValue().get(token);
+        if(user == null){
+            throw new BusinessException(BusinessErrEnum.USER_NOT_LOGIN,"user has not login");
+        }
+
+        Map<String,Object> map = VerificationCodeUtil.generateCodeAndPic();
+
+        redisTemplate.opsForValue().set("verify_code_"+user.getId(),map.get("code"));
+        redisTemplate.expire("verify_code_"+user.getId(),10,TimeUnit.MINUTES);
+
+        ImageIO.write((RenderedImage) map.get("codePic"), "jpeg", response.getOutputStream());
+
     }
 
 }

@@ -50,7 +50,7 @@
 
     <div class="form-group">
         <div>
-            <img style="height: 100px; width: auto" id="imgUrl" />
+            <img style="height: 100px; width: auto" id="imgUrl"/>
         </div>
     </div>
 
@@ -69,7 +69,15 @@
     </div>
     <div class="form-actions">
         <button class="btn blue" id="createorder" type="submit">
-            Place an order
+            Place your order
+        </button>
+    </div>
+
+    <div id="verifyDiv" style="display:none;" class="form-actions">
+        <img src=""/>
+        <input type="text" id="verifyContent" value=""/>
+        <button class="btn blue" id="verifyButton" type="submit">
+            Verify
         </button>
     </div>
 
@@ -89,26 +97,57 @@
     }
 
 
-
     let itemVO = {};
 
-    jQuery(document).ready(function () {
-        $("#createorder").on("click", function (){
+    function hasInit(){
+        var isInit = $("#isInit").val();
+        return isInit;
+    }
 
-            let token = window.localStorage["token"];
-            if (token == null) {
-                alert("Please login before creating your order");
-                window.location.href="login.html";
-                return false;
+    function setHasInit(){
+        $("#isInit").val("1");
+    }
+
+    function initView() {
+        let initStatus = hasInit();
+        if(initStatus == "1"){
+            return;
+        }
+        $.ajax({
+            type: "GET",
+            url: `http://${host}/item/get`,
+            data: {
+                "id": getParam("id")
+            },
+            // xhrFields: {withCredentials: true},
+            success: function (data) {
+                if (data.status == "success") {
+                    itemVO = data.data;
+                    reloadDom();
+                    setInterval(reloadDom, 1000);
+                    setHasInit();
+                } else {
+                    alert("Failed to retrieve item details due to error: " + data.data.errMsg);
+                }
+            },
+            error: function (data) {
+                alert("Failed to retrieve item details due to error: " + data.responseText);
             }
+        });
+    }
 
+
+    jQuery(document).ready(function () {
+        $("#verifyButton").on("click", function () {
+            let token = window.localStorage["token"];
             $.ajax({
                 type: "POST",
+                contentType: "application/x-www-form-urlencoded",
                 url: `http://${host}/order/generatetoken?token=${token}`,
-                contentType:"application/x-www-form-urlencoded",
                 data: {
                     "itemId": itemVO.id,
-                    "promoId": itemVO.promoId
+                    "promoId": itemVO.promoId,
+                    "verifyCode": $("#verifyContent").val()
                 },
                 xhrFields: {withCredentials: true},
                 success: function (data) {
@@ -118,7 +157,7 @@
                         $.ajax({
                             type: "POST",
                             url: `http://${host}/order/create?token=${token}`,
-                            contentType:"application/x-www-form-urlencoded",
+                            contentType: "application/x-www-form-urlencoded",
                             data: {
                                 "itemId": itemVO.id,
                                 "amount": 1,
@@ -133,7 +172,7 @@
                                 } else {
                                     alert("Failed to create order due to error: " + data.data.errMsg);
                                     if (data.data.errCode == 20003) {
-                                        window.location.href="login.html";
+                                        window.location.href = "login.html";
                                     }
                                 }
                             },
@@ -146,7 +185,7 @@
                     } else {
                         alert("Failed to get token due to error: " + data.data.errMsg);
                         if (data.data.errCode == 20003) {
-                            window.location.href="login.html";
+                            window.location.href = "login.html";
                         }
                     }
                 },
@@ -154,33 +193,22 @@
                     alert("Failed to get token due to error: " + data.responseText);
                 }
             });
-
-
-
-        })
-
-
-        $.ajax({
-            type: "GET",
-            url: `http://${host}/item/get`,
-            data: {
-                "id": getParam("id")
-            },
-            // xhrFields: {withCredentials: true},
-            success: function (data) {
-                if (data.status == "success") {
-                    itemVO=data.data;
-                    reloadDom();
-                    setInterval(reloadDom, 1000);
-                } else {
-                    alert("Failed to retrieve item details due to error: " + data.data.errMsg);
-                }
-            },
-            error: function (data) {
-                alert("Failed to retrieve item details due to error: " + data.responseText);
-            }
         });
 
+        $("#createorder").on("click", function () {
+
+            let token = window.localStorage["token"];
+            if (token == null) {
+                alert("Please login before creating your order");
+                window.location.href = "login.html";
+                return false;
+            }
+
+            $("#verifyDiv img").attr("src",`http://${host}/order/generateverifycode?token=${token}`);
+            $("#verifyDiv").show();
+        })
+
+        initView();
     });
 
     function reloadDom() {
@@ -198,7 +226,7 @@
 
             if (delta <= 0) {
                 // promo has already begun
-                itemVO.promoStatus=2;
+                itemVO.promoStatus = 2;
                 reloadDom();
             }
 

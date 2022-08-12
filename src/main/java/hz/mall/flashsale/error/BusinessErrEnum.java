@@ -16,8 +16,8 @@ public enum BusinessErrEnum implements CommonError{
     USER_NOT_LOGIN(20003, "user has not login"),
 
     // 30000: order error
-    STOCK_NOT_ENOUGH(30001, "stock not enough")
-
+    STOCK_NOT_ENOUGH(30001, "stock not enough"),
+    RATE_LIMIT(30002,"Maximum access limit reached. Please try again later.")
     ;
 
 
