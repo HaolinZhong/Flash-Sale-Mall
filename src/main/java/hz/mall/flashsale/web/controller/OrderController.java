@@ -1,22 +1,17 @@
 package hz.mall.flashsale.web.controller;
 
 import com.google.common.util.concurrent.RateLimiter;
-import hz.mall.flashsale.domain.Order;
 import hz.mall.flashsale.domain.User;
 import hz.mall.flashsale.error.BusinessErrEnum;
 import hz.mall.flashsale.error.BusinessException;
 import hz.mall.flashsale.mq.DecreaseStockProducer;
 import hz.mall.flashsale.service.IntegratedService;
 import hz.mall.flashsale.service.ItemService;
-import hz.mall.flashsale.service.OrderService;
-import hz.mall.flashsale.service.PromoService;
 import hz.mall.flashsale.util.VerificationCodeUtil;
 import hz.mall.flashsale.web.model.CommonReturnType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.rocketmq.client.producer.MQProducer;
-import org.apache.rocketmq.remoting.protocol.RequestType;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
@@ -143,7 +138,6 @@ public class OrderController {
         if(!redisVerifyCode.equalsIgnoreCase(verifyCode)){
             throw new BusinessException(BusinessErrEnum.PARAMETER_VALIDATION_ERROR,"wrong verification code");
         }
-
 
         String promoToken = integratedService.generateFlashSaleToken(promoId, itemId, user.getId());
         if (promoToken == null) throw new BusinessException(BusinessErrEnum.PARAMETER_VALIDATION_ERROR, "failed to generate token");
