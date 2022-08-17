@@ -15,7 +15,7 @@ Basic frontend webpages were also developed to show the process of browsing item
 
 - Optimized order creation by storing item stock in Redis and implementing asynchronous transaction of order creation & item stock reduction with **RocketMQ**, ensured final data consistency.
 
-- Set up limited item access tokens and fixed thread pool to flatten excessive amount of requests.
+- Set up limited item access tokens and fixed thread pool to flatten excessive number of requests.
 
 - Applied verification code and **Guava Rate Limiter** for anti-scalper.
 
